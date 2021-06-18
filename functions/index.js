@@ -19,7 +19,7 @@ exports.addPlayerColor = functions.https.onCall(async (data, context) => {
     .doc("colors");
   const colorsDoc = await colors.get();
   const colorOptions = colorsDoc.data().options;
-  if (!colorOptions.includes(data.text)) {
+  if (!colorOptions.includes(data.color)) {
     throw new functions.https.HttpsError(
       "invalid-argument",
       "Color is not available"
@@ -29,13 +29,13 @@ exports.addPlayerColor = functions.https.onCall(async (data, context) => {
   const userId = context.auth.uid;
   const users = admin.firestore().collection(users);
   const userDoc = await users.doc(userId).get();
-  if (userDoc.color === data.text) {
+  if (userDoc.color === data.color) {
     return true;
   }
 
   const snapshot = await users.get();
   snapshot.forEach((doc) => {
-    if (doc.data().color === data.text) {
+    if (doc.data().color === data.color) {
       throw new functions.https.HttpsError(
         "failed-precondition",
         "Two players cannot choose the same color"
@@ -43,7 +43,7 @@ exports.addPlayerColor = functions.https.onCall(async (data, context) => {
     }
   });
 
-  return await users.doc(userId).update({ color: data.text });
+  return await users.doc(userId).update({ color: data.color });
 });
 
 /*Deselect color chosen by player */

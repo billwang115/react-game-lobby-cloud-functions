@@ -29,7 +29,7 @@ exports.addPlayerColor = functions.https.onCall(async (data, context) => {
   const userId = context.auth.uid;
   const users = admin.firestore().collection("users");
   const userDoc = await users.doc(userId).get();
-  if (userDoc.color === data.color) {
+  if (userDoc.data().color === data.color) {
     return true;
   }
 

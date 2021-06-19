@@ -47,13 +47,13 @@ exports.addPlayerColor = functions.https.onCall(async (data, context) => {
 });
 
 /*Deselect color chosen by player */
-exports.deselectPlayerColor = functions.https.onCall(async (data, context) => {
+exports.deselectPlayerColor = functions.https.onCall((data, context) => {
   this.checkAuthenticated(context.auth);
 
   const userId = context.auth.uid;
   const user = admin.firestore().collection(users).doc(userId);
 
-  return await user.update({ color: "" });
+  return user.update({ color: "" });
 });
 
 /*Get logged in player's selected color */
@@ -65,7 +65,7 @@ exports.getCurrentPlayerColor = functions.https.onCall(
     const user = admin.firestore().collection(users).doc(userId);
     const userDoc = await user.get();
 
-    return await userDoc.data().color;
+    return userDoc.data().color;
   }
 );
 

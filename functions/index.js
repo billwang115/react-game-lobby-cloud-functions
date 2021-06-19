@@ -27,7 +27,7 @@ exports.addPlayerColor = functions.https.onCall(async (data, context) => {
   }
 
   const userId = context.auth.uid;
-  const users = admin.firestore().collection(users);
+  const users = admin.firestore().collection("users");
   const userDoc = await users.doc(userId).get();
   if (userDoc.color === data.color) {
     return true;
@@ -43,7 +43,7 @@ exports.addPlayerColor = functions.https.onCall(async (data, context) => {
     }
   });
 
-  return await users.doc(userId).update({ color: data.color });
+  return users.doc(userId).update({ color: data.color });
 });
 
 /*Deselect color chosen by player */
@@ -51,7 +51,7 @@ exports.deselectPlayerColor = functions.https.onCall((data, context) => {
   this.checkAuthenticated(context.auth);
 
   const userId = context.auth.uid;
-  const user = admin.firestore().collection(users).doc(userId);
+  const user = admin.firestore().collection("users").doc(userId);
 
   return user.update({ color: "" });
 });
@@ -62,7 +62,7 @@ exports.getCurrentPlayerColor = functions.https.onCall(
     this.checkAuthenticated(context.auth);
 
     const userId = context.auth.uid;
-    const user = admin.firestore().collection(users).doc(userId);
+    const user = admin.firestore().collection("users").doc(userId);
     const userDoc = await user.get();
 
     return userDoc.data().color;
@@ -74,7 +74,7 @@ exports.getNonLoggedInColors = functions.https.onCall(async (data, context) => {
   this.checkAuthenticated(context.auth);
 
   const userId = context.auth.uid;
-  const users = admin.firestore().collection(users);
+  const users = admin.firestore().collection("users");
   const snapshot = await users.get();
   const colorMap = new Map();
 

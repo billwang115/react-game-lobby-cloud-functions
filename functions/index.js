@@ -9,6 +9,12 @@ exports.registerNewUser = functions.auth.user().onCreate((user) => {
   });
 });
 
+/*Remove user from database if account is deleted */
+exports.removeUserData = functions.auth.user().onDelete((user) => {
+  const doc = admin.firestore().collection("users").doc(user.uid);
+  return doc.delete();
+});
+
 /* Store color chosen by a player (must be color and not deselect)*/
 exports.addPlayerColor = functions.https.onCall(async (data, context) => {
   this.checkAuthenticated(context.auth);
@@ -64,6 +70,9 @@ exports.getCurrentPlayerColor = functions.https.onCall(
     const userId = context.auth.uid;
     const user = admin.firestore().collection("users").doc(userId);
     const userDoc = await user.get();
+    if (!userDoc.exists) {
+      return "";
+    }
 
     return userDoc.data().color;
   }
@@ -74,17 +83,13 @@ exports.getNonLoggedInColors = functions.https.onCall(async (data, context) => {
   this.checkAuthenticated(context.auth);
 
   const userId = context.auth.uid;
-  const users = admin.firestore().collection("users");
+  const users = admin
+    .firestore()
+    .collection("users")
+    .where("__name__", "!=", userId);
   const snapshot = await users.get();
-  const colorMap = new Map();
-
-  snapshot.forEach((doc) => {
-    if (userId !== doc.id) {
-      colorMap.set(doc.id, doc.data().color);
-    }
-  });
-
-  return colorMap;
+  let snapshotList = snapshot.docs.map((doc) => [doc.id, doc.data().color]);
+  return Object.fromEntries(snapshotList);
 });
 
 /* Get color options */

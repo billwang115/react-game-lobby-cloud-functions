@@ -88,8 +88,7 @@ exports.getNonLoggedInColors = functions.https.onCall(async (data, context) => {
     .collection("users")
     .where("__name__", "!=", userId);
   const snapshot = await users.get();
-  let snapshotList = snapshot.docs.map((doc) => [doc.id, doc.data().color]);
-  return Object.fromEntries(snapshotList);
+  return snapshot.docs.map((doc) => [doc.id, doc.data().color]);
 });
 
 /* Get color options */

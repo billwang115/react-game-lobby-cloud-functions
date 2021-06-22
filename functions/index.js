@@ -11,7 +11,7 @@ exports.registerNewUser = functions.auth.user().onCreate((user) => {
   });
 });
 
-/*Remove user from database if account is deleted */
+/* Remove user from database if account is deleted */
 exports.removeUserData = functions.auth.user().onDelete((user) => {
   const doc = admin.firestore().collection("users").doc(user.uid);
   return doc.delete();
@@ -54,7 +54,7 @@ exports.addPlayerColor = functions.https.onCall(async (data, context) => {
   return users.doc(userId).update({ color: data.color });
 });
 
-/*Deselect color chosen by player */
+/* Deselect color chosen by player */
 exports.deselectPlayerColor = functions.https.onCall((data, context) => {
   this.checkAuthenticated(context.auth);
 
@@ -64,31 +64,33 @@ exports.deselectPlayerColor = functions.https.onCall((data, context) => {
   return user.update({ color: "" });
 });
 
-/*Get logged in player's selected color */
-exports.getCurrentPlayerColor = functions.https.onCall(
+/* Get player's selected color by id */
+exports.getPlayerColor = functions.https.onCall(async (data, context) => {
+  this.checkAuthenticated(context.auth);
+
+  const user = admin.firestore().collection("users").doc(data.id);
+  const userDoc = await user.get();
+  if (!userDoc.exists) {
+    throw new functions.https.HttpsError("not-found", "User cannot be found");
+  }
+
+  return userDoc.data().color;
+});
+
+/* get id of players not logged in */
+exports.getNonLoggedInPlayers = functions.https.onCall(
   async (data, context) => {
     this.checkAuthenticated(context.auth);
 
     const userId = context.auth.uid;
-    const user = admin.firestore().collection("users").doc(userId);
-    const userDoc = await user.get();
-
-    return userDoc.data().color;
+    const users = admin
+      .firestore()
+      .collection("users")
+      .where("__name__", "!=", userId);
+    const snapshot = await users.get();
+    return snapshot.docs.map((doc) => doc.id);
   }
 );
-
-/*Get all colors of players not logged in */
-exports.getNonLoggedInColors = functions.https.onCall(async (data, context) => {
-  this.checkAuthenticated(context.auth);
-
-  const userId = context.auth.uid;
-  const users = admin
-    .firestore()
-    .collection("users")
-    .where("__name__", "!=", userId);
-  const snapshot = await users.get();
-  return snapshot.docs.map((doc) => [doc.id, doc.data().color]);
-});
 
 /* Get color options */
 exports.getColorOptions = functions.https.onCall(async (data, context) => {
@@ -102,7 +104,7 @@ exports.getColorOptions = functions.https.onCall(async (data, context) => {
   return colorsDoc.data().options;
 });
 
-/*Update download url for user */
+/* Update download url for user */
 exports.updateProfileImageUrl = functions.https.onCall(
   async (data, context) => {
     this.checkAuthenticated(context.auth);
@@ -129,7 +131,7 @@ exports.getProfileImagebyId = functions.https.onCall(async (data, context) => {
 /* 
 Helper Functions
 */
-/*Check if user is authenticated (helper function)*/
+/* Check if user is authenticated (helper function) */
 exports.checkAuthenticated = (auth) => {
   if (!auth) {
     throw new functions.https.HttpsError(

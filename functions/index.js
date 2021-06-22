@@ -6,6 +6,8 @@ admin.initializeApp();
 exports.registerNewUser = functions.auth.user().onCreate((user) => {
   return admin.firestore().collection("users").doc(user.uid).set({
     color: "",
+    profilePicUrl:
+      "https://firebasestorage.googleapis.com/v0/b/react-backend-exercise.appspot.com/o/defaults%2FdefaultProfilePic.png?alt=media&token=0288febe-000d-40cc-aa36-4747869595f6",
   });
 });
 
@@ -70,9 +72,6 @@ exports.getCurrentPlayerColor = functions.https.onCall(
     const userId = context.auth.uid;
     const user = admin.firestore().collection("users").doc(userId);
     const userDoc = await user.get();
-    if (!userDoc.exists) {
-      return "";
-    }
 
     return userDoc.data().color;
   }
@@ -103,6 +102,33 @@ exports.getColorOptions = functions.https.onCall(async (data, context) => {
   return colorsDoc.data().options;
 });
 
+/*Update download url for user */
+exports.updateProfileImageUrl = functions.https.onCall(
+  async (data, context) => {
+    this.checkAuthenticated(context.auth);
+
+    const userId = context.auth.uid;
+    const user = admin.firestore().collection("users").doc(userId);
+    return user.update({ profilePicUrl: data.Url });
+  }
+);
+
+/* Get Image by user Id */
+exports.getProfileImagebyId = functions.https.onCall(async (data, context) => {
+  this.checkAuthenticated(context.auth);
+
+  const user = admin.firestore().collection("users").doc(data.id);
+  const userDoc = await user.get();
+  if (!userDoc.exists) {
+    throw new functions.https.HttpsError("not-found", "User cannot be found");
+  }
+
+  return userDoc.data().profilePicUrl;
+});
+
+/* 
+Helper Functions
+*/
 /*Check if user is authenticated (helper function)*/
 exports.checkAuthenticated = (auth) => {
   if (!auth) {
